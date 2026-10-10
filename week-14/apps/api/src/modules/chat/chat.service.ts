@@ -1,5 +1,5 @@
 import { CHANNELS, dmRoom } from "@week14/protocol";
-import type { Channel, ClientMessage, ErrorCode, ServerMessage } from "@week14/protocol";
+import type { Channel, ClientMessage, ErrorCode, ReactionEmoji, ServerMessage } from "@week14/protocol";
 import type { Broker, Unsubscribe } from "../../broker/broker.ts";
 import type { ChatConnection } from "./chat.connection.ts";
 
@@ -25,6 +25,10 @@ export class ChatService {
   readonly #channels = new Map<Channel, Set<string>>();
   readonly #connections = new Map<string, ChatConnection>(); // apodo -> conexión
   readonly #sessions = new Map<ChatConnection, Session>();
+  // Igual que el chat original, estos datos son temporales (en memoria).
+  // Conservar 200 IDs por canal evita reaccionar a mensajes inexistentes.
+  readonly #channelMessageIds = new Map<Channel, string[]>();
+  readonly #reactions = new Map<Channel, Map<string, Map<ReactionEmoji, Set<string>>>>();
   // Suscripciones de este servidor a los tópicos "channel:<nombre>".
   readonly #channelSubscriptions = new Map<Channel, Unsubscribe>();
 
@@ -55,6 +59,8 @@ export class ChatService {
         return this.#message(connection, session, message.channel, message.text);
       case "dm":
         return this.#directMessage(connection, session, message.to, message.text);
+      case "react":
+        return this.#react(connection, session, message.channel, message.messageId, message.emoji);
     }
   }
 
@@ -140,15 +146,53 @@ export class ChatService {
     // Así, con varios servidores, los miembros conectados a otro servidor también lo reciben.
     // El remitente también recibe su mensaje (eco): esa es la confirmación
     // de que el servidor lo aceptó y lo distribuyó.
+    const messageId = crypto.randomUUID();
+    const ids = this.#channelMessageIds.get(channel) ?? [];
+    ids.push(messageId);
+    if (ids.length > 200) {
+      const removed = ids.shift();
+      if (removed) this.#reactions.get(channel)?.delete(removed);
+    }
+    this.#channelMessageIds.set(channel, ids);
     this.#broker.publish<ServerMessage>(channelTopic(channel), {
       type: "message",
       message: {
-        id: crypto.randomUUID(),
+        id: messageId,
         channel,
         from: session.nickname,
         text,
         sentAt: new Date().toISOString(),
       },
+    });
+  }
+
+  #react(connection: ChatConnection, session: Session, channel: Channel, messageId: string, emoji: ReactionEmoji): void {
+    if (!session.channels.has(channel)) {
+      sendError(connection, "NOT_IN_CHANNEL", `Únase a ${channel} antes de reaccionar`);
+      return;
+    }
+    if (!this.#channelMessageIds.get(channel)?.includes(messageId)) {
+      sendError(connection, "INVALID_MESSAGE", "El mensaje ya no está disponible para reaccionar");
+      return;
+    }
+
+    const byChannel = this.#reactions.get(channel) ?? new Map<string, Map<ReactionEmoji, Set<string>>>();
+    const byMessage = byChannel.get(messageId) ?? new Map<ReactionEmoji, Set<string>>();
+    const users = byMessage.get(emoji) ?? new Set<string>();
+
+    // Cada usuario puede agregar o quitar su reacción tocando el mismo emoji.
+    if (users.has(session.nickname)) users.delete(session.nickname);
+    else users.add(session.nickname);
+    if (users.size === 0) byMessage.delete(emoji);
+    else byMessage.set(emoji, users);
+
+    byChannel.set(messageId, byMessage);
+    this.#reactions.set(channel, byChannel);
+    this.#broker.publish<ServerMessage>(channelTopic(channel), {
+      type: "reaction",
+      channel,
+      messageId,
+      reactions: [...byMessage.entries()].map(([emoji, names]) => ({ emoji, users: [...names].sort() })),
     });
   }
 

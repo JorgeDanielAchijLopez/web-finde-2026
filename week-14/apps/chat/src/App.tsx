@@ -98,6 +98,8 @@ export function App() {
               messages={chat.messages}
               me={me}
               emptyText={view.kind === "channel" ? "Aún no hay mensajes. ¡Salude!" : `Escríbale a ${view.user}.`}
+              reactions={state.reactions}
+              onReact={view.kind === "channel" ? chat.reactToMessage : undefined}
             />
           ) : (
             <p className="text-muted-foreground m-auto px-4 text-center text-sm">
