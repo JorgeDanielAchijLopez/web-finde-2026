@@ -1,0 +1,18 @@
+{
+  "name": "week-14-realtime",
+  "private": true,
+  "description": "Semana 14: WebSocket (chat estilo Discord) y Server-Sent Events (notificaciones) con Hono, React y Zod",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.7",
+    "typescript": "^5.9.3"
+  }
+}

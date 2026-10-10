@@ -1,0 +1,25 @@
+# compiled output
+/dist
+/node_modules
+/build
+
+# logs
+logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# tests
+/coverage
+
+# env
+.env
+.env.*
+
+# sqlite
+/data/*.sqlite
+/data/*.sqlite-*
+*.sqlite
+*.sqlite-journal

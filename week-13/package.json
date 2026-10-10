@@ -1,0 +1,31 @@
+{
+  "name": "notes-api",
+  "version": "0.0.1",
+  "description": "Small Hono notes API demonstrating Drizzle ORM migrations with Zod validation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.0",
+    "@hono/zod-validator": "^0.7.0",
+    "better-sqlite3": "^11.10.0",
+    "drizzle-orm": "^0.44.0",
+    "hono": "^4.9.0",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.0.0",
+    "drizzle-kit": "^0.31.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

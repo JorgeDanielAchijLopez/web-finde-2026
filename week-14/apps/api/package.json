@@ -1,0 +1,24 @@
+{
+  "name": "@week14/api",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Servidor Hono: chat por WebSocket y notificaciones por Server-Sent Events",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/main.ts",
+    "start": "node src/main.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.17",
+    "@hono/node-ws": "^1.3.1",
+    "@hono/zod-validator": "^0.9.1",
+    "@week14/protocol": "workspace:*",
+    "hono": "^4.13.13",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3"
+  }
+}

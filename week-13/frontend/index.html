@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <!-- Create a template that will contain the note data -->
+    <template id="note-template">
+        <div class="note">
+            <h2 class="note-title">Note Title</h2>
+            <p class="note-body">Note Body</p>
+            <p class="note-author">Note Author</p>
+            <p class="note-created-at">Note Created At</p>
+        </div>
+    </template>
+
+    <!-- Create a div that will contain the notes -->
+    <div id="notes"></div>
+
+    <!-- fetch notes from the API -->
+    <script src="index.js"></script>
+</body>
+</html>

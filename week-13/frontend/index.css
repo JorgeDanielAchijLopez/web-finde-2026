@@ -1,0 +1,12 @@
+/* Style the notes */
+.note {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+}
+
+.note-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
