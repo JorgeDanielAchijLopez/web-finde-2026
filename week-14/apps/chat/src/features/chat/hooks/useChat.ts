@@ -1,5 +1,5 @@
 import { dmRoom } from "@week14/protocol";
-import type { Channel, ChatMessage, DirectMessage, ServerMessage } from "@week14/protocol";
+import type { Channel, ChatMessage, DirectMessage, ReactionEmoji, ReactionEntry, ServerMessage } from "@week14/protocol";
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { ChatSocket, type ConnectionStatus } from "../api/chatSocket";
 
@@ -13,6 +13,7 @@ export type ChatState = {
   view: ChatView | null;
   channelMessages: Partial<Record<Channel, ChatMessage[]>>;
   directMessages: Record<string, DirectMessage[]>; // por sala "dm:a:b"
+  reactions: Record<string, ReactionEntry[]>; // por ID de mensaje
   presence: Partial<Record<Channel, string[]>>;
   online: string[];
   unread: Record<string, number>; // por canal o por sala de DM
@@ -35,6 +36,7 @@ const initialState: ChatState = {
   view: null,
   channelMessages: {},
   directMessages: {},
+  reactions: {},
   presence: {},
   online: [],
   unread: {},
@@ -85,6 +87,8 @@ function handleServerMessage(state: ChatState, message: ServerMessage): ChatStat
         unread: markUnread(state, room),
       };
     }
+    case "reaction":
+      return { ...state, reactions: { ...state.reactions, [message.messageId]: message.reactions } };
     case "error":
       return { ...state, error: message.message };
   }
@@ -179,6 +183,13 @@ export function useChat() {
     [state.view],
   );
 
+  const reactToMessage = useCallback(
+    (messageId: string, emoji: ReactionEmoji) => {
+      if (state.view?.kind !== "channel" || state.status !== "open") return;
+      socketRef.current?.send({ type: "react", channel: state.view.channel, messageId, emoji });
+    },
+    [state.view, state.status],
+  );
   // Mensajes de la conversación abierta.
   const key = viewKey(state, state.view);
   const messages: (ChatMessage | DirectMessage)[] =
@@ -196,5 +207,5 @@ export function useChat() {
   // Al desmontar el componente se cierra la conexión.
   useEffect(() => () => socketRef.current?.close(), []);
 
-  return { state, messages, unreadFor, connect, disconnect, join, leave, openView, sendText, dismissError };
+  return { state, messages, unreadFor, connect, disconnect, join, leave, openView, sendText, reactToMessage, dismissError };
 }

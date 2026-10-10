@@ -15,6 +15,10 @@ export const NicknameSchema = z
   .max(20, "El apodo acepta máximo 20 caracteres")
   .regex(/^[\p{L}\p{N}_-]+$/u, "Use solo letras, números, _ o -");
 
+// Emojis permitidos para reaccionar. La validación se comparte entre cliente y servidor.
+export const ReactionEmojiSchema = z.enum(["👍", "❤️", "😂", "🔥", "👏"]);
+export type ReactionEmoji = z.infer<typeof ReactionEmojiSchema>;
+
 export const TextSchema = z
   .string()
   .trim()
@@ -31,6 +35,12 @@ export const ClientMessageSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("message"), channel: ChannelSchema, text: TextSchema }),
   // Mensaje directo: el servidor lo publica en la sala "dm:<a>:<b>".
   z.object({ type: z.literal("dm"), to: NicknameSchema, text: TextSchema }),
+  z.object({
+    type: z.literal("react"),
+    channel: ChannelSchema,
+    messageId: z.uuid(),
+    emoji: ReactionEmojiSchema,
+  }),
 ]);
 export type ClientMessage = z.infer<typeof ClientMessageSchema>;
 
@@ -64,6 +74,12 @@ export const ErrorCodeSchema = z.enum([
 ]);
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 
+export const ReactionEntrySchema = z.object({
+  emoji: ReactionEmojiSchema,
+  users: z.array(z.string()),
+});
+export type ReactionEntry = z.infer<typeof ReactionEntrySchema>;
+
 export const ServerMessageSchema = z.discriminatedUnion("type", [
   // Respuesta a "hello": la conexión ya tiene apodo.
   z.object({
@@ -77,6 +93,12 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("presence"), channel: ChannelSchema, users: z.array(z.string()) }),
   z.object({ type: z.literal("message"), message: ChatMessageSchema }),
   z.object({ type: z.literal("dm"), message: DirectMessageSchema }),
+  z.object({
+    type: z.literal("reaction"),
+    channel: ChannelSchema,
+    messageId: z.uuid(),
+    reactions: z.array(ReactionEntrySchema),
+  }),
   z.object({ type: z.literal("error"), code: ErrorCodeSchema, message: z.string() }),
 ]);
 export type ServerMessage = z.infer<typeof ServerMessageSchema>;
